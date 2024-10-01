@@ -1,0 +1,83 @@
+#map {
+    height: 480px;
+    width: 100%;
+}
+
+.custom-alert {
+    display: none;
+    background-color: #f8d7da;
+    color: #721c24;
+    padding: 15px;
+    margin-bottom: 20px;
+    border: 1px solid #f5c6cb;
+    border-radius: 5px;
+    opacity: 0;
+    transition: opacity 0.5s ease;
+}
+
+/* Mengatur tampilan form */
+#addMarkerForm {
+    background-color: #f8f9fa; /* Warna latar belakang form */
+    padding: 20px; /* Padding di dalam form */
+    border-radius: 5px; /* Sudut membulat */
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); /* Bayangan */
+}
+
+/* Mengatur input dan textarea dalam form */
+#addMarkerForm input[type="text"],
+#addMarkerForm textarea,
+#addMarkerForm input[type="file"] {
+    width: 100%; /* Lebar penuh */
+    padding: 10px; /* Padding dalam input */
+    margin: 10px 0; /* Margin atas dan bawah */
+    border: 1px solid #ced4da; /* Border */
+    border-radius: 4px; /* Sudut membulat */
+}
+
+/* Mengatur tombol dalam form */
+#addMarkerForm button {
+    background-color: #007bff; /* Warna latar tombol */
+    color: white; /* Warna teks tombol */
+    border: none; /* Tanpa border */
+    padding: 10px 15px; /* Padding tombol */
+    border-radius: 4px; /* Sudut membulat */
+    cursor: pointer; /* Kursor tangan saat hover */
+}
+
+#addMarkerForm button:hover {
+    background-color: #0056b3; /* Warna latar saat hover */
+}
+
+/* Mengatur heading */
+h1 {
+    margin: 20px 0; /* Margin atas dan bawah */
+}
+
+/* Mengatur tampilan custom alert */
+.custom-alert {
+    display: none; /* Sembunyikan alert secara default */
+    position: fixed; /* Tetap di posisi tetap */
+    top: 20px; /* Jarak dari atas */
+    left: 50%; /* Pusatkan dari kiri */
+    transform: translateX(-50%); /* Pusatkan horizontal */
+    background-color: #007bff; /* Warna latar biru */
+    color: white; /* Warna teks putih */
+    padding: 15px; /* Padding dalam alert */
+    border-radius: 5px; /* Sudut membulat */
+    z-index: 1000; /* Di atas elemen lain */
+    transition: opacity 0.5s; /* Efek transisi */
+}
+
+/* Responsif untuk perangkat kecil */
+@media (max-width: 576px) {
+    #addMarkerForm {
+        padding: 15px; /* Padding lebih kecil di perangkat kecil */
+    }
+
+    #addMarkerForm input[type="text"],
+    #addMarkerForm textarea,
+    #addMarkerForm input[type="file"],
+    #addMarkerForm button {
+        margin: 5px 0; /* Margin lebih kecil */
+    }
+}

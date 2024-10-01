@@ -1,3 +1,4 @@
+// Inisialisasi peta
 var map = L.map('map').setView([-8.157980, 113.724701], 13); // Lokasi default
 
 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
@@ -23,6 +24,22 @@ fetch('api/get_marker.php')
         });
     });
 
+// Fungsi untuk menampilkan custom alert
+function showAlert(message) {
+    const alertBox = document.getElementById('customAlert');
+    alertBox.innerText = message; // Set pesan
+    alertBox.style.display = 'block'; // Tampilkan alert
+    alertBox.style.opacity = '1'; // Set opacity ke 1
+
+    // Sembunyikan alert setelah 3 detik
+    setTimeout(() => {
+        alertBox.style.opacity = '0'; // Mengurangi opacity
+        setTimeout(() => {
+            alertBox.style.display = 'none'; // Sembunyikan setelah transisi
+        }, 500); // Waktu untuk transisi
+    }, 3000); // Durasi tampil alert
+}
+
 // Tambah marker
 document.getElementById('addMarkerForm').addEventListener('submit', function (e) {
     e.preventDefault();
@@ -35,10 +52,10 @@ document.getElementById('addMarkerForm').addEventListener('submit', function (e)
     }).then(response => response.json())
     .then(data => {
         if (data.status === 'success') {
-            alert('Marker berhasil ditambahkan');
+            showAlert('Marker berhasil ditambahkan');
             location.reload(); // Refresh untuk mengambil data terbaru
         } else {
-            alert('Gagal menambah marker');
+            showAlert('Gagal menambah marker');
         }
     });
 });
@@ -64,10 +81,10 @@ function editMarker(id, name, description, photo, latitude, longitude) {
         }).then(response => response.json())
         .then(data => {
             if (data.status === 'success') {
-                alert('Marker berhasil diperbarui');
+                showAlert('Marker berhasil diperbarui');
                 location.reload(); // Refresh untuk mendapatkan data terbaru
             } else {
-                alert('Gagal memperbarui marker');
+                showAlert('Gagal memperbarui marker');
             }
         });
     }
@@ -91,7 +108,7 @@ function deleteMarker(id, btn) {
         })
         .then(data => {
             if (data.status === 'success') {
-                alert('Marker berhasil dihapus');
+                showAlert('Marker berhasil dihapus');
 
                 // Hapus marker dari peta
                 const markerToRemove = btn.closest('.leaflet-popup')._source; // Dapatkan referensi marker
@@ -99,12 +116,40 @@ function deleteMarker(id, btn) {
                     map.removeLayer(markerToRemove); // Menghapus marker dari peta
                 }
             } else {
-                alert(data.message); // Tampilkan pesan kesalahan jika ada
+                showAlert(data.message); // Tampilkan pesan kesalahan jika ada
             }
         })
         .catch(error => {
             console.error('Error:', error);
-            alert('Terjadi kesalahan saat menghapus marker: ' + error.message);
+            showAlert('Terjadi kesalahan saat menghapus marker: ' + error.message);
         });
     }
 }
+
+// // Fungsi untuk mencari lokasi berdasarkan nama tempat
+// document.getElementById('searchButton').addEventListener('click', function() {
+//     const placeName = document.getElementById('placeSearch').value;
+
+//     // Menggunakan Nominatim untuk mencari lokasi
+//     fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(placeName)}&format=json`)
+//         .then(response => response.json())
+//         .then(data => {
+//             if (data && data.length > 0) {
+//                 const location = data[0]; // Ambil hasil pertama
+//                 document.getElementById('latitude').value = location.lat; // Set latitude
+//                 document.getElementById('longitude').value = location.lon; // Set longitude
+
+//                 // Pindahkan peta ke lokasi yang ditemukan
+//                 map.setView([location.lat, location.lon], 13);
+
+//                 L.marker([location.lat, location.lon]).addTo(map)
+//                     .bindPopup(`Lokasi: ${placeName}`).openPopup();
+//             } else {
+//                 showAlert('Lokasi tidak ditemukan.');
+//             }
+//         })
+//         .catch(error => {
+//             console.error('Error:', error);
+//             showAlert('Terjadi kesalahan saat mencari lokasi: ' + error.message);
+//         });
+// });
