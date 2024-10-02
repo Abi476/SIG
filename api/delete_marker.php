@@ -1,24 +1,27 @@
 <?php
-include('../config/db.php'); // Pastikan ini mengarah ke file konfigurasi yang benar
+header('Content-Type: application/json');
+include 'db_connection.php'; // Include your database connection
 
-// Ambil input JSON
-$data = json_decode(file_get_contents('php://input'), true);
-$id = isset($data['id']) ? $data['id'] : null; // Ambil ID dari input JSON
+if ($_SERVER['REQUEST_METHOD'] === 'DELETE') {
+    parse_str(file_get_contents("php://input"), $data);
+    $markerId = $data['id'];
 
-if ($id !== null) {
-    try {
-        $stmt = $pdo->prepare("DELETE FROM markers WHERE id = ?");
-        $stmt->execute([$id]);
+    if ($markerId) {
+        // Prepare your SQL statement
+        $stmt = $conn->prepare("DELETE FROM markers WHERE id = ?");
+        $stmt->bind_param("i", $markerId);
 
-        // Cek apakah ada baris yang terpengaruh
-        if ($stmt->rowCount() > 0) {
-            echo json_encode(['status' => 'success', 'message' => 'Marker deleted successfully']);
+        if ($stmt->execute()) {
+            echo json_encode(['status' => 'success']);
         } else {
-            echo json_encode(['status' => 'error', 'message' => 'Marker not found']);
+            echo json_encode(['status' => 'error', 'message' => 'Database error']);
         }
-    } catch (PDOException $e) {
-        echo json_encode(['status' => 'error', 'message' => 'Database error: ' . $e->getMessage()]);
+        $stmt->close();
+    } else {
+        echo json_encode(['status' => 'error', 'message' => 'Marker ID missing']);
     }
 } else {
-    echo json_encode(['status' => 'error', 'message' => 'ID is required']);
+    echo json_encode(['status' => 'error', 'message' => 'Invalid request method']);
 }
+
+$conn->close();

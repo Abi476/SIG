@@ -42,64 +42,8 @@
         </div>
     </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM" crossorigin="anonymous"></script>
     <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
-    <script>
-        var map = L.map('map').setView([-8.157980, 113.724701], 13); // Lokasi default
+    <script src="assets/js/main.js"></script> <!-- Make sure this path is correct -->
 
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            attribution: 'Map data © OpenStreetMap contributors'
-        }).addTo(map);
-
-        // Event listener untuk klik pada peta
-        map.on('click', function(e) {
-            // Ambil koordinat dari event click
-            var lat = e.latlng.lat;
-            var lng = e.latlng.lng;
-
-            // Tampilkan koordinat di form input
-            document.getElementById('latitude').value = lat;
-            document.getElementById('longitude').value = lng;
-
-            // Tambahkan marker ke peta dengan popup informasi
-            var marker = L.marker([lat, lng]).addTo(map);
-            marker.bindPopup("Lat: " + lat + "<br>Lng: " + lng).openPopup();
-        });
-
-        // Fungsi untuk menampilkan custom alert (sama seperti sebelumnya)
-        function showAlert(message) {
-            const alertBox = document.getElementById('customAlert');
-            alertBox.innerText = message;
-            alertBox.style.display = 'block';
-            alertBox.style.opacity = '1';
-
-            setTimeout(() => {
-                alertBox.style.opacity = '0';
-                setTimeout(() => {
-                    alertBox.style.display = 'none';
-                }, 500);
-            }, 3000);
-        }
-
-        // Tambah marker dengan form
-        document.getElementById('addMarkerForm').addEventListener('submit', function (e) {
-            e.preventDefault();
-
-            var formData = new FormData(this);
-
-            fetch('api/add_marker.php', {
-                method: 'POST',
-                body: formData
-            }).then(response => response.json())
-            .then(data => {
-                if (data.status === 'success') {
-                    showAlert('Marker berhasil ditambahkan');
-                    location.reload(); // Refresh untuk mengambil data terbaru
-                } else {
-                    showAlert('Gagal menambah marker');
-                }
-            });
-        });
-    </script>
 </body>
 </html>
