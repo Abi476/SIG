@@ -5,6 +5,7 @@
         attribution: 'Map data © OpenStreetMap contributors'
     }).addTo(map);
 
+    const markers = {};
 // Ambil data marker dari server
 fetch('api/get_marker.php')
     .then(response => {
@@ -17,15 +18,15 @@ fetch('api/get_marker.php')
         if (data.status === 'success' && Array.isArray(data.data)) {
             data.data.forEach(marker => {
                 let leafletMarker = L.marker([marker.latitude, marker.longitude])
-                    .addTo(map)
-                    .bindPopup(`
-                        <b>${marker.name}</b><br>
-                        ${marker.description}<br>
-                        <img src="uploads/${marker.photo}" width="100"><br>
-                        <button onclick="editMarker(${marker.id}, '${marker.name.replace(/'/g, "\\'")}', '${marker.description.replace(/'/g, "\\'")}', '${marker.photo}', ${marker.latitude}, ${marker.longitude})">Edit</button>
-                        <button onclick="deleteMarker(${marker.id}, this)">Hapus</button>
-                    `);
-                leafletMarker.id = marker.id;
+                .addTo(map)
+                .bindPopup(`
+                  <b>${marker.name}</b><br>
+                  ${marker.description}<br>
+                  <img src="uploads/${marker.photo}" width="100"><br>
+                  <button onclick="editMarkerTemp(${marker.id}, '${marker.name.replace(/'/g, "\\'")}', '${marker.description.replace(/'/g, "\\'")}', '${marker.photo}', ${marker.latitude}, ${marker.longitude})">Edit</button>
+                  <button onclick="deleteMarker(${marker.id}, this)">Hapus</button>
+                `);
+              markers[marker.id] = leafletMarker;
             });
         } else {
             console.error('Error fetching markers:', data.message);
@@ -144,51 +145,164 @@ fetch('api/get_marker.php')
             });
         });
 
-    // Fungsi untuk mengedit marker sementara (saat belum disimpan di server)
-    function editMarkerTemp(button) {
-        const markerPopup = button.closest('.leaflet-popup');
-        const marker = markerPopup._source;
-
-        const newName = prompt('Edit Nama Marker:', marker.getPopup().getContent().split('<b>')[1].split('</b>')[0]);
-        const newDescription = prompt('Edit Deskripsi Marker:', marker.getPopup().getContent().split('<br>')[1]);
-
-        if (newName && newDescription) {
-            marker.setPopupContent(`
+        function editMarkerTemp(id, name, description, photo, latitude, longitude) {
+            const marker = markers[id]; // Access the marker by its custom ID
+            
+            if (!marker) {
+              console.error(`Error: marker with ID ${id} not found`);
+              return;
+            }
+            
+            // Create a popup to get user input
+            const popup = L.popup()
+              .setLatLng(marker.getLatLng())
+              .setContent(`
+                <div class="popup-edit">
+                  <h2>Edit Marker</h2>
+                  <form>
+                    <label for="name">Name:</label>
+                    <input type="text" id="name" value="${name}"><br><br>
+                    <label for="description">Description:</label>
+                    <textarea id="description">${description}</textarea><br><br>
+                    <button type="submit">Save</button>
+                  </form>
+                </div>
+              `)
+              .openOn(map);
+            
+            // Add event listener to the form
+            popup._contentNode.querySelector('form').addEventListener('submit', (e) => {
+              e.preventDefault();
+              const newName = popup._contentNode.querySelector('#name').value;
+              const newDescription = popup._contentNode.querySelector('#description').value;
+              
+              if (!newName || !newDescription) {
+                alert('Please fill in all fields');
+                return;
+              }
+              
+              // Update marker content directly
+              marker.setPopupContent(`
                 <b>${newName}</b><br>
                 ${newDescription}<br>
-                <button onclick="editMarkerTemp(this)">Edit</button>
-                <button onclick="deleteMarkerTemp(this)">Hapus</button>
-            `).openPopup();
-        }
-    }
+                <img src="uploads/${photo}" width="100"><br>
+                <button onclick="editMarkerTemp(${marker.id}, '${newName.replace(/'/g, "\\'")}', '${newDescription.replace(/'/g, "\\'")}', '${photo}', ${marker.latitude}, ${marker.longitude})">Edit</button>
+                <button onclick="deleteMarker(${id}, this)">Hapus</button>
+              `);
+              
+              // Send AJAX request to update marker on the server
+              const data = {
+                id,
+                name: newName,
+                description: newDescription,
+                latitude,
+                longitude
+              };
+              
+              fetch('api/edit_marker.php', {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(data)
+              })
+              .then(response => response.json())
+              .then(data => {
+                if (data.status !== 'success') {
+                  console.error('Error updating marker:', data.message);
+                }
+              })
+              .catch(error => {
+                console.error('Fetch error:', error);
+              });
+              
+              // Close the popup
+              popup.remove();
+            });
+          }
+        
+        
 
 // Fungsi untuk menghapus marker
-function deleteMarker(markerId, button) {
+function deleteMarker(markerId, marker) {
     // Konfirmasi penghapusan
     if (confirm('Apakah Anda yakin ingin menghapus marker ini?')) {
-        // Ambil marker dari tombol yang diklik
-        const markerPopup = button.closest('.leaflet-popup');
-        const marker = markerPopup._source;
+        console.log('Marker:', marker); // Debug marker
+        console.log('Marker ID:', markerId); // Debug marker ID
 
-        // Hapus marker dari peta
-        map.removeLayer(marker);
+        // Cek apakah marker berhasil diambil
+        if (marker) {
+            // Hapus marker dari peta
+            map.removeLayer(marker);
 
-        // Kirim permintaan penghapusan ke server
-        fetch(`api/delete_marker.php?id=${markerId}`, {
-            method: 'DELETE' // Menggunakan metode DELETE
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.status === 'success') {
-                showAlert('Marker berhasil dihapus');
-                location.reload(); // Refresh untuk mengambil data terbaru
-            } else {
-                showAlert('Gagal menghapus marker: ' + data.message);
-            }
-        })
-        .catch(error => {
-            console.error('Fetch error:', error);
-            showAlert('Terjadi kesalahan saat menghapus marker');
-        });
+            // Kirim permintaan penghapusan ke server
+            fetch('api/delete_marker.php', {
+                method: 'DELETE',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ id: markerId }) // Mengirimkan ID marker dalam body
+            })
+            .then(response => {
+                // Respons bisa dalam bentuk teks, bukan JSON
+                return response.text().then(text => {
+                    try {
+                        return JSON.parse(text); // Parsing JSON respons
+                    } catch (e) {
+                        console.error('Response is not JSON:', text);
+                        throw new Error('Invalid JSON response');
+                    }
+                });
+            })
+            .then(data => { console.log(data)
+                if (data.status === 'success') {
+                    showAlert('Marker berhasil dihapus');
+                    location.reload(); // Refresh untuk mengambil data terbaru
+                } else {
+                    showAlert('Gagal menghapus marker: ' + data.message);
+                }
+            })
+            .catch(error => {
+                console.error('Fetch error:', error);
+                showAlert('Terjadi kesalahan saat menghapus marker');
+            });
+        } else {
+            console.error('Marker tidak ditemukan!');
+        }
     }
 }
+
+// ...
+
+// Fungsi untuk mencari lokasi
+function searchLocation() {
+    const searchInput = document.getElementById('search-input');
+    const searchResults = document.getElementById('search-results');
+
+    searchInput.addEventListener('input', () => {
+        const searchTerm = searchInput.value.trim();
+
+        if (searchTerm) {
+            fetch('./cari_lokasi.php', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded'
+                },
+                body: `searchTerm=${searchTerm}`
+            })
+            .then(response => response.text())
+            .then(data => {
+                searchResults.innerHTML = data;
+            })
+            .catch(error => {
+                console.error('Fetch error:', error);
+            });
+        } else {
+            searchResults.innerHTML = '';
+        }
+    });
+}
+
+searchLocation();
+
+// ...

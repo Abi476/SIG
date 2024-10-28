@@ -1,27 +1,37 @@
 <?php
 header('Content-Type: application/json');
-include 'db_connection.php'; // Include your database connection
+include('../config/db.php'); // Sertakan file koneksi
 
+// Pastikan metode request adalah DELETE
 if ($_SERVER['REQUEST_METHOD'] === 'DELETE') {
-    parse_str(file_get_contents("php://input"), $data);
-    $markerId = $data['id'];
+    // Ambil data dari body request
+    $data = json_decode(file_get_contents("php://input"), true);
+$markerId = $data['id'] ?? null;
+    
+    // Cek apakah markerId dikirim
+    if (isset($data['id']) && !empty($data['id'])) {
+// Konversi ke integer untuk keamanan
+        
+        try {
+            // Persiapkan pernyataan SQL untuk menghapus marker
+            $stmt = $pdo->prepare("DELETE FROM markers WHERE id = :id");
+            $stmt->bindParam(':id', $markerId, PDO::PARAM_INT);
 
-    if ($markerId) {
-        // Prepare your SQL statement
-        $stmt = $conn->prepare("DELETE FROM markers WHERE id = ?");
-        $stmt->bind_param("i", $markerId);
-
-        if ($stmt->execute()) {
-            echo json_encode(['status' => 'success']);
-        } else {
-            echo json_encode(['status' => 'error', 'message' => 'Database error']);
+            // Eksekusi pernyataan SQL
+            if ($stmt->execute()) {
+                echo json_encode(['status' => 'success', 'message' => 'Marker berhasil dihapus']);
+            } else {
+                echo json_encode(['status' => 'error', 'message' => 'Kesalahan saat menghapus marker']);
+            }
+        } catch (PDOException $e) {
+            echo json_encode(['status' => 'error', 'message' => 'Kesalahan database: ' . $e->getMessage()]);
         }
-        $stmt->close();
     } else {
-        echo json_encode(['status' => 'error', 'message' => 'Marker ID missing']);
+        echo json_encode(['status' => 'error', 'message' => 'Marker ID tidak ditemukan']);
     }
 } else {
-    echo json_encode(['status' => 'error', 'message' => 'Invalid request method']);
+    echo json_encode(['status' => 'error', 'message' => 'Metode request tidak valid']);
 }
 
-$conn->close();
+// Tidak perlu menutup koneksi PDO secara eksplisit, akan ditutup secara otomatis saat skrip selesai.
+?>
