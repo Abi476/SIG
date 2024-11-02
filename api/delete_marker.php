@@ -34,4 +34,4 @@ $markerId = $data['id'] ?? null;
 }
 
 // Tidak perlu menutup koneksi PDO secara eksplisit, akan ditutup secara otomatis saat skrip selesai.
-?>
+

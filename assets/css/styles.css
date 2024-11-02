@@ -15,9 +15,8 @@
     transition: opacity 0.5s ease;
 }
 
-/* Mengatur tampilan form */
 #addMarkerForm {
-    background-color: #f8f9fa; /* Warna latar belakang form */
+    background-color: #f8f9fa; 
     padding: 20px; /* Padding di dalam form */
     border-radius: 5px; /* Sudut membulat */
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); /* Bayangan */
